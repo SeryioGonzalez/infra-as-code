@@ -2,61 +2,43 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "adminUserName": {
-      "defaultValue": "sergio",
-      "type": "string"
-    }, 
+	"deploymentName":     { 
+		"type": "string" 
+	},  
+  
     "sshPublicKey": {
       "type": "string",
       "defaultValue": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDKlMlDqCEYmtD3NzHTzQXcu9Oj3U+CKYCU4D+kwEN5BuKs5J9lPFA9B2MsK9MYsyXoG4Gkt3ENHyzY+dgCN3eLdyiyOAtpHKddqO+5CG3mZoTlONTSofZm2pbnCoWh8UdKlBUvD467gFbw+HcBnXXY89zhdBIkhjQELcuZc0je8XsYrw++9DEJW9GBlREE8E/RustYlF5/MsNHvIxZqKNhBocX4Cj/nUdV+aGxTMa4pEnFi8gDA8xuYK9mDA/GNFd47TMa6kd+YLlojlfzp1GGDiwDK1px1TpjjzXan/dMMFbCsL5dgpuFul34U0yOdg7iEgoAUUwTGvHQsMyIl+BJ sergio@MININT-SCP2P2V"
     },
-    "dnsLabelPrefix": {
-      "type": "string",
-      "defaultValue": "sapdemo",
-      "metadata": {
-        "description": "Unique DNS Name for the Public IP used to access the Virtual Machine."
-      }
-    },
     "installerName": {
       "type": "string",
-      "defaultValue": "automatesap.sh",
-      "metadata": {
-        "description": "Script to be executed"
-      }
+      "defaultValue": "automatesap.sh"
     },
     "installerBlob": {
       "type": "string",
-	  "defaultValue": "https://automationsapscripts.blob.core.windows.net/scripts/automatesap.sh",
-      "metadata": {
-        "description": "Blob with installation script."
-      }
+	  "defaultValue": "https://automationsapscripts.blob.core.windows.net/scripts/automatesap.sh"
     },
-	"vmSize": {
-		"type": "string",
-		"defaultValue":  "Standard_DS1_V2"
-	}
+	
+    "adminUserName": 	   { "defaultValue": "sergio", "type": "string"    }, 
+	"vmSize":              { "type": "string", "defaultValue": "Standard_DS1_V2" },
+	"storageAccountType":  { "type": "string", "defaultValue": "Standard_LRS" },
+    "publicIPAddressType": { "type": "string", "defaultValue": "Dynamic" },
+    "imagePublisher":      { "type": "string", "defaultValue": "Canonical" },
+    "imageOffer":          { "type": "string", "defaultValue": "UbuntuServer" },
+    "vmSize":              { "type": "string", "defaultValue": "Standard_DS1_V2" },
+    "ubuntuOSVersion":     { "type": "string", "defaultValue": "16.04-LTS" },
+	"vnetName":     	   { "type": "string", "defaultValue": "my_demo_network" },
+	"vnetRG":     		   { "type": "string", "defaultValue": "automation_vnet" }
+
   },
   "variables": {
-    "storageAccountType": "Standard_LRS",
-    "imagePublisher": "Canonical",
-    "imageOffer": "UbuntuServer",
-    "vmSize": "Standard_DS1_V2",
-    "ubuntuOSVersion": "16.04-LTS",
-    "publicIPAddressType": "Dynamic",
 
-    "storageAccountName": "[concat(uniquestring(resourceGroup().id), parameters('dnsLabelPrefix'))]",
-
-    "vnet1_netPrefix": "10.99.0.0/16",
-    "vnet1_vnetName": "vnet1",
-    "vnet1_ID": "[resourceId('Microsoft.Network/virtualNetworks',variables('vnet1_vnetName'))]",
-    "vnet1_subnetPrefix": "10.99.0.0/24",
-    "vnet1_subnetName": "vnet1_subnet1",
-    "vnet1_subnetRef": "[concat(variables('vnet1_ID'),'/subnets/',variables('vnet1_subnetName'))]",
-
-    "vm1_vmName": "sapdemo",
-    "vm1_nicName": "[concat(variables('vm1_vmName'), parameters('dnsLabelPrefix'))]",
-    "vm1_publicIPAddressName": "[concat('vm1PubIp1', variables('vm1_vmName'), parameters('dnsLabelPrefix'))]",
-    "vm1_dnsLabelPrefix": "[concat(variables('vm1_vmName'),'-',parameters('dnsLabelPrefix'))]"
+    "storageAccountName":  "[concat('storacc',    parameters('deploymentName'))]",
+    "publicIPAddressName": "[concat('public_ip_', parameters('deploymentName'))]",
+    "vmName":              "[concat('vm',         parameters('deploymentName'))]",
+    "nicName":             "[concat('nic_',       parameters('deploymentName'))]",
+	
+	"vnetSubnetRef":       "[resourceId(parameters('vnetRG') , 'Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), concat( parameters('vnetName'),'_subnet_2'))]"
 
   },
   "resources": [
@@ -66,53 +48,31 @@
       "apiVersion": "2017-06-01",
       "location": "[resourceGroup().location]",
       "sku": {
-        "name": "[variables('storageAccountType')]"
+        "name": "[parameters('storageAccountType')]"
       },
       "kind": "Storage",
       "properties": {}
     },
-    {
-      "apiVersion": "2017-04-01",
-      "type": "Microsoft.Network/virtualNetworks",
-      "name": "[variables('vnet1_vnetName')]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('vnet1_netPrefix')]"
-          ]
-        },
-        "subnets": [
-            {
-              "name": "[variables('vnet1_subnetName')]",
-              "properties": {
-                "addressPrefix": "[variables('vnet1_subnetPrefix')]"
-              }
-            }
-          ]
-        }
-      },
 
     {
       "apiVersion": "2017-04-01",
       "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('vm1_publicIPAddressName')]",
+      "name": "[variables('publicIPAddressName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
+        "publicIPAllocationMethod": "[parameters('publicIPAddressType')]",
         "dnsSettings": {
-          "domainNameLabel": "[variables('vm1_dnsLabelPrefix')]"
+          "domainNameLabel": "[parameters('deploymentName')]"
         }
       }
     },
     {
       "apiVersion": "2017-04-01",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[variables('vm1_nicName')]",
+      "name": "[variables('nicName')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses/', variables('vm1_publicIPAddressName'))]",
-        "[resourceId('Microsoft.Network/virtualNetworks/', variables('vnet1_vnetName'))]"
+        "[resourceId('Microsoft.Network/publicIPAddresses/', variables('publicIPAddressName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -121,10 +81,10 @@
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('vm1_publicIPAddressName'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
               },
               "subnet": {
-                "id": "[variables('vnet1_subnetRef')]"
+                "id": "[variables('vnetSubnetRef')]"
               }
             }
           }
@@ -134,18 +94,18 @@
     {
       "apiVersion": "2017-03-30",
       "type": "Microsoft.Compute/virtualMachines",
-      "name": "[variables('vm1_vmName')]",
+      "name": "[variables('vmName')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces/', variables('vm1_nicName'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
       ],
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[variables('vm1_vmName')]",
+          "computerName": "[variables('vmName')]",
           "adminUserName": "[parameters('adminUserName')]",
           "linuxConfiguration": {
             "disablePasswordAuthentication": "true",
@@ -161,9 +121,9 @@
         },
         "storageProfile": {
           "imageReference": {
-            "publisher": "[variables('imagePublisher')]",
-            "offer": "[variables('imageOffer')]",
-            "sku": "[variables('ubuntuOSVersion')]",
+            "publisher": "[parameters('imagePublisher')]",
+            "offer": "[parameters('imageOffer')]",
+            "sku": "[parameters('ubuntuOSVersion')]",
             "version": "latest"
           },
           "osDisk": {
@@ -180,7 +140,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('vm1_nicName'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
             }
           ]
         },
@@ -198,7 +158,7 @@
           "location": "[resourceGroup().location]",
           "apiVersion": "2016-03-30",
           "dependsOn": [
-            "[resourceId('Microsoft.Compute/virtualMachines', variables('vm1_vmName'))]"
+            "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
           ],
           "tags": {
             "displayName": "installExecutor"
@@ -219,11 +179,5 @@
       ]
     }
 
-  ],
-  "outputs": {
-    "hostname": {
-      "type": "string",
-      "value": "[reference(variables('vm1_publicIPAddressName')).dnsSettings.fqdn]"
-    }
-  }
+  ]
 }

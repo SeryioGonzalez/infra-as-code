@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "network_name": {
+      "type": "string"
+    },
+    "vnet_netPrefix": {
+      "defaultValue": "10.199.0.0/16",
+      "type": "string"
+    },
+    "subnet1_prefix": {
+      "defaultValue": "10.199.1.0/24",
+      "type": "string"
+    },
+	"subnet2_prefix": {
+      "defaultValue": "10.199.2.0/24",
+      "type": "string"
+    }
+  },
+  "variables": {
+
+    "subnet1_name": "[concat(parameters('network_name'), '_subnet_1')]",
+    "subnet2_name": "[concat(parameters('network_name'), '_subnet_2')]"
+  },
+  "resources": [
+    {
+      "apiVersion": "2017-04-01",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('network_name')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnet_netPrefix')]"
+          ]
+        },
+        "subnets": [
+            {
+              "name": "[variables('subnet1_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('subnet1_prefix')]"
+              }
+            },
+            {
+              "name": "[variables('subnet2_name')]",
+              "properties": {
+                "addressPrefix": "[parameters('subnet2_prefix')]"
+              }
+            }
+         ]
+        }
+    }
+  ]
+}
