@@ -18,6 +18,9 @@ subscription="YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
 $ ./0_login.sh
 To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code XXXXXX to authenticate.
 
+#DEPLOY THE VNET
+$ ./1_create_network.sh
+
 #DEPLOY THE VM
 $ ./2_deploy_vm.sh
 LOGGING: Checking template JSON
@@ -25,7 +28,7 @@ LOGGING: Creating new resource group automation25053
 .......
 
 #DELETE DE RESOURCE GROUPS CREATED
-$ ./3_delete.sh
+$ ./4_delete.sh
 LOGGING: DELETING RESOURCE GROUPS WITH PREFIX automation in name
 ```
 
